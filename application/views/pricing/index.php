@@ -1,17 +1,16 @@
 <?php if (!$this) { exit(header('HTTP/1.0 403 Forbidden')); } ?>
-
 <div class="container">
     <div>
 
         <h3>Search Price</h3>
         <form action="<?php echo URL_WITH_INDEX_FILE; ?>pricing/index" method="POST" class="form-inline">
-            <label>Procedure Id</label>
+            <label>Procedure</label>
 
             <select class="form-control" name="procedureID" id="procedureID"  data-placeholder="Select a procedure" required="">
                 <option></option>
                 <?php
                     while ($row = sqlsrv_fetch_array($procedures)){
-                        echo "<option ".($_POST["procedureID"] ? "selected=\"selected\""  : ""). " value=\"".$row['ProcedureID']."\">" . $row['ProcedureName'] . "</option>";
+                        echo "<option ".($_POST["procedureID"]==$row['ProcedureID'] ? "selected=\"selected\""  : ""). " value=\"".$row['ProcedureID']."\">" . $row['ProcedureName'] . "</option>";
                     }
                 ?>
             </select>
