@@ -17,7 +17,7 @@
 
 <!--            <input type="text" class="form-control" name="procedureId" value="" required />-->
             <label>Zip Code</label>
-            <input type="text"  class="form-control" name="zipCode" value="<?php echo $_POST["zipCode"] ?>"
+            <input type="text"  class="form-control" name="zipCode" value="<?php echo ($_POST["zipCode"]?:'53203') ?>"
                    pattern=".{3,}" required title="Enter at least first 3 digits!" />
             <input type="submit" class="btn" name="submit_add_song" value="Submit" />
         </form>
