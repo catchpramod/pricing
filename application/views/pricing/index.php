@@ -54,8 +54,8 @@
                     ?>
                     <tr>
                         <td><?php if (isset($price['ServiceCode'])) echo htmlspecialchars($price['ServiceCode'], ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php if (isset($price['ProviderEntityCode'])) echo htmlspecialchars(($price['ProviderEntityCode']=="I"?"Individual":"Organization"), ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php if (isset($price['AverageAmt'])) echo htmlspecialchars($price['AverageAmt'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php if (isset($price['Provider'])) echo htmlspecialchars(($price['Provider']), ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php if (isset($price['AverageAmt'])) echo '$ '. htmlspecialchars(number_format($price['AverageAmt'],2), ENT_QUOTES, 'UTF-8'); ?></td>
                     </tr>
 
             <?php

@@ -42,7 +42,7 @@ class Model
     }
 
     public function getMasterProcedures(){
-        $sql = "SELECT distinct ProcedureID, ProcedureName FROM [dbo].[Procedure_Mapping]";
+        $sql = "SELECT distinct ProcedureID, ProcedureName FROM [dbo].[NS_Procedure_Mapping]";
 //        $cursorType = array("Scrollable" => SQLSRV_CURSOR_KEYSET);
         return sqlsrv_query($this->db, $sql);
     }
