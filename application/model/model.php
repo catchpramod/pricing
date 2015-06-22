@@ -27,12 +27,14 @@ class Model
         $zipCode=&$_POST['zipCode'];
         $ServiceCode='';
         $ProviderEntityCode='';
+        $MedicareAvg=0;
         $AverageAmt=0;
         $params = array(
             array($procedureID, SQLSRV_PARAM_IN),
             array($zipCode, SQLSRV_PARAM_IN),
             array($ServiceCode, SQLSRV_PARAM_OUT),
             array($ProviderEntityCode, SQLSRV_PARAM_OUT),
+            array($MedicareAvg, SQLSRV_PARAM_OUT),
             array($AverageAmt, SQLSRV_PARAM_OUT)
         );
 

@@ -31,6 +31,8 @@
             <tr>
                 <td>Service Code</td>
                 <td>Provider</td>
+                <td>Average Medicare Amount</td>
+                <td>Average Medicare Multiplier</td>
                 <td>Average Amount</td>
             </tr>
             </thead>
@@ -49,18 +51,31 @@
                 die( print_r( sqlsrv_errors(), true));
             }
                 $i=0;
+                $Total=0;
                 while ($price = sqlsrv_fetch_array($prices, SQLSRV_FETCH_ASSOC)) {
                     $i=$i+1;
+                    $Total+=isset($price['AverageAmt'])?$price['AverageAmt']:0;
                     ?>
                     <tr>
                         <td><?php if (isset($price['ServiceCode'])) echo htmlspecialchars($price['ServiceCode'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php if (isset($price['Provider'])) echo htmlspecialchars(($price['Provider']), ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php if (isset($price['MedicareAvg'])) echo '$ '. htmlspecialchars(number_format($price['MedicareAvg'],2), ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php if (isset($price['AverageAmt']) and isset($price['MedicareAvg'])) echo htmlspecialchars(number_format($price['AverageAmt'] / $price['MedicareAvg'],2), ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php if (isset($price['AverageAmt'])) echo '$ '. htmlspecialchars(number_format($price['AverageAmt'],2), ENT_QUOTES, 'UTF-8'); ?></td>
                     </tr>
 
             <?php
             }
-            if($i==0){  echo '<tr><td colspan="3">No data found!</td></tr>';}
+
+            if($i>0){
+                echo '<tr style="font-weight: bold;">
+                        <td colspan="3"></td>
+                        <td>Total</td>
+                        <td>$ '.number_format($Total,2).'</td>
+                      </tr>';
+            }else{
+                echo '<tr><td colspan="5">No data found!</td></tr>';
+            }
             ?>
             </tbody>
         </table>
