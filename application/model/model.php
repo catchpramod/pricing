@@ -14,38 +14,59 @@ class Model
         }
     }
 
-//    public function getAllPricing(){
-//        $sql = "EXEC [dbo].[SP_GetPricing] @procedureID = 1901 @zipCode = '53202'";
-//        $cursorType = array("Scrollable" => SQLSRV_CURSOR_KEYSET);
-//        $params = array(&$_POST['procedureId'],&$_POST['zipCode']);
-//        return sqlsrv_query($this->db, $sql, $params, $cursorType);
-//    }
-
-
-    public function getAllPricing(){
-        $procedureID=&$_POST['procedureID'];
-        $zipCode=&$_POST['zipCode'];
+    public function getPricingForBundle($bundleID, $zipCode){
         $ServiceCode='';
-        $ProviderEntityCode='';
+        $Provider='';
         $MedicareAvg=0;
         $AverageAmt=0;
         $params = array(
-            array($procedureID, SQLSRV_PARAM_IN),
+            array($bundleID, SQLSRV_PARAM_IN),
             array($zipCode, SQLSRV_PARAM_IN),
             array($ServiceCode, SQLSRV_PARAM_OUT),
-            array($ProviderEntityCode, SQLSRV_PARAM_OUT),
+            array($Provider, SQLSRV_PARAM_OUT),
             array($MedicareAvg, SQLSRV_PARAM_OUT),
             array($AverageAmt, SQLSRV_PARAM_OUT)
         );
 
         $sql = "{call dbo.SP_GetPricing( ?, ?)}";
 
-        return sqlsrv_query($this->db, $sql, $params);
+        $prices = sqlsrv_query($this->db, $sql, $params);
+
+        $priceList=[];
+
+        while ($price = sqlsrv_fetch_array($prices, SQLSRV_FETCH_ASSOC)) {
+            $po=new stdClass();
+            $po->serviceCode=$price['ServiceCode'];
+            $po->providerType=$price['Provider'];
+            $po->medicareAvg=$price['MedicareAvg'];
+            $po->averageAmount=$price['AverageAmt'];
+
+            $priceList[]=$po;
+        }
+
+        return $priceList;
     }
 
+
+
     public function getMasterProcedures(){
-        $sql = "SELECT distinct ProcedureID, ProcedureName FROM [dbo].[NS_Procedure_Mapping]";
-//        $cursorType = array("Scrollable" => SQLSRV_CURSOR_KEYSET);
+        $sql = "SELECT distinct ProcedureID, ProcedureName FROM [dbo].[NS_Procedure] Order by ProcedureName";
         return sqlsrv_query($this->db, $sql);
+    }
+
+    public function getBundlesForProcedure($procedureCode){
+        $params = array($procedureCode);
+        $sql = "Select * from dbo.NS_Bundle where ProcedureID=?";
+        $bundles = sqlsrv_query($this->db, $sql, $params);
+        $bundleList =[];
+
+        while ($row = sqlsrv_fetch_array($bundles)){
+            $bundle=new stdClass();
+            $bundle->id=$row['ID'];
+            $bundle->name=$row['BundleName'];
+            $bundle->procedureID=$row['ProcedureID'];
+            $bundleList[]=$bundle;
+        }
+        return $bundleList;
     }
 }

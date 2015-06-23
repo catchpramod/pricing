@@ -39,43 +39,50 @@
             <tbody>
 
             <?php
+            if(count($priceBundles)>0){
+                foreach($bundleList as $bundle){
+                    $bundleTotal = 0;
+                    $priceList = $priceBundles[$bundle->id];?>
+                        <tr>
+                            <td colspan="5" style="font-weight: bold;">
+                                <?php echo $bundle->name ?>
+                            </td>
+                        </tr>
+                    <?php
+                    foreach($priceList as $price){
+                        $bundleTotal+=   $price->averageAmount;
+                        ?>
 
-            if( $prices === false ) {
+                        <tr>
+                            <td><?php if (isset($price->serviceCode)) echo htmlspecialchars($price->serviceCode, ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php if (isset($price->providerType)) echo htmlspecialchars(($price->providerType), ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php if (isset($price->medicareAvg)) echo '$ '. htmlspecialchars(number_format($price->medicareAvg,2), ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php if (isset($price->averageAmount) and isset($price->medicareAvg)) echo htmlspecialchars(number_format($price->averageAmount / $price->medicareAvg,2), ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php if (isset($price->averageAmount)) echo '$ '. htmlspecialchars(number_format($price->averageAmount,2), ENT_QUOTES, 'UTF-8'); ?></td>
+                        </tr>
+                        <?php
+                    }
 
+                    echo '<tr style="font-weight: bold;">
+                             <td colspan="3"></td>
+                             <td>'.$bundle->name .' Total</td>
+                             <td>$ '.number_format($bundleTotal,2).'</td>
+                          </tr>';
+                }
+
+            } else{
+                echo '<tr><td colspan="5">No data found!</td></tr>' ;
+            }
+
+//            if( $prices === false ) {
 //                foreach ( sqlsrv_errors() as $error )
 //                {
-//                    echo "SQLSTATE: ".$error['SQLSTATE']."<br/>";
-//                    echo "Code: ".$error['code']."<br/>";
-//                    echo "Message: ".$error['message']."<br/>";
+//                    echo "SQLSTATE: ".$error['SQLSTATE']." ";
+//                    echo "Code: ".$error['code']." ";
+//                    echo "Message: ".$error['message']." ";
 //                }
-                die( print_r( sqlsrv_errors(), true));
-            }
-                $i=0;
-                $Total=0;
-                while ($price = sqlsrv_fetch_array($prices, SQLSRV_FETCH_ASSOC)) {
-                    $i=$i+1;
-                    $Total+=isset($price['AverageAmt'])?$price['AverageAmt']:0;
-                    ?>
-                    <tr>
-                        <td><?php if (isset($price['ServiceCode'])) echo htmlspecialchars($price['ServiceCode'], ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php if (isset($price['Provider'])) echo htmlspecialchars(($price['Provider']), ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php if (isset($price['MedicareAvg'])) echo '$ '. htmlspecialchars(number_format($price['MedicareAvg'],2), ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php if (isset($price['AverageAmt']) and isset($price['MedicareAvg'])) echo htmlspecialchars(number_format($price['AverageAmt'] / $price['MedicareAvg'],2), ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php if (isset($price['AverageAmt'])) echo '$ '. htmlspecialchars(number_format($price['AverageAmt'],2), ENT_QUOTES, 'UTF-8'); ?></td>
-                    </tr>
-
-            <?php
-            }
-
-            if($i>0){
-                echo '<tr style="font-weight: bold;">
-                        <td colspan="3"></td>
-                        <td>Total</td>
-                        <td>$ '.number_format($Total,2).'</td>
-                      </tr>';
-            }else{
-                echo '<tr><td colspan="5">No data found!</td></tr>';
-            }
+//                die( print_r( sqlsrv_errors(), true));
+//            }
             ?>
             </tbody>
         </table>
