@@ -69,4 +69,42 @@ class Model
         }
         return $bundleList;
     }
+
+    public function getProcedureBundleList(){
+        $sql = "select p.ProcedureID, p.ProcedureName, b.ID BundleID, b.BundleName
+                from dbo.NS_Procedure p
+                left join dbo.NS_Bundle b on b.ProcedureID = p.ProcedureID";
+
+        $bundles = sqlsrv_query($this->db, $sql);
+        $procedureList =[];
+
+        while ($row = sqlsrv_fetch_array($bundles)){
+            $bundle=new stdClass();
+            $bundle->procedureID=$row['ProcedureID'];
+            $bundle->procedureName=$row['ProcedureName'];
+            $bundle->bundleID=$row['BundleID'];
+            $bundle->bundleName=$row['BundleName'];
+            $procedureList[]=$bundle;
+        }
+        return $procedureList;
+    }
+
+    public function getServiceList($bundleID){
+        $params= array($bundleID);
+        $sql = "select * from dbo.NS_Service where BundleID=?";
+        //ID	BundleID	ServiceCode	ServiceType	ProviderType
+        $services = sqlsrv_query($this->db, $sql,$params);
+        $serviceList =[];
+
+        while ($row = sqlsrv_fetch_array($services)){
+            $service=new stdClass();
+            $service->ID=$row['ID'];
+            $service->bundleID=$row['BundleID'];
+            $service->serviceCode=$row['ServiceCode'];
+            $service->serviceType=$row['ServiceType'];
+            $service->providerType=$row['ProviderType'];
+            $serviceList[]=$service;
+        }
+        return $serviceList;
+    }
 }

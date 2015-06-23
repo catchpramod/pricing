@@ -27,7 +27,7 @@
     <div>
         <h3>List of prices</h3>
         <table class="table table-hover">
-            <thead style="background-color: #ddd; font-weight: bold;">
+            <thead>
             <tr>
                 <td>Service Code</td>
                 <td>Provider</td>
