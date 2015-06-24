@@ -7,6 +7,12 @@ $(function() {
     // document load triggers
     $(document).ready(function() {
         $("select").select2();
+
+        $("#price_search").submit(function(){
+            $("#price_wrapper").hide();
+            $("#loader_wrapper").show();
+            return true;
+        })
     });
 
     // simple demo to show create something via javascript on the page
