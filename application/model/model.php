@@ -59,10 +59,18 @@ class Model
         $sql = "Select * from dbo.NS_Bundle where ProcedureID=?";
         $bundles = sqlsrv_query($this->db, $sql, $params);
         $bundleList =[];
-
+//        if( $bundles === false ) {
+//            foreach ( sqlsrv_errors() as $error )
+//            {
+//                echo "SQLSTATE: ".$error['SQLSTATE']." ";
+//                echo "Code: ".$error['code']." ";
+//                echo "Message: ".$error['message']." ";
+//            }
+//            die( print_r( sqlsrv_errors(), true));
+//        }
         while ($row = sqlsrv_fetch_array($bundles)){
             $bundle=new stdClass();
-            $bundle->id=$row['ID'];
+            $bundle->id=$row['BundleID'];
             $bundle->name=$row['BundleName'];
             $bundle->procedureID=$row['ProcedureID'];
             $bundleList[]=$bundle;
