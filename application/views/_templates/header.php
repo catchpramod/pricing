@@ -25,5 +25,6 @@ if (!$this) {
     <link href="<?php echo URL; ?>public/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?php echo URL; ?>public/css/select2.css" rel="stylesheet">
     <link href="<?php echo URL; ?>public/css/style.css" rel="stylesheet">
+    <link href="<?php echo URL; ?>public/css/spinner.css" rel="stylesheet" >
 </head>
 <body>

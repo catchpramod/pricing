@@ -33,7 +33,6 @@
             <div class="throbber-loader">
                 Loading…
             </div>
-            <link rel="stylesheet" href="http://css-spinners.com/css/spinner/throbber.css" type="text/css">
         </div>
 
         <div id="price_wrapper">
