@@ -47,3 +47,10 @@ if (defined('URL_SUB_FOLDER')) {
  * Configuration for: Database
  * This is the place where you define your database credentials, database type etc.
  */
+
+define('DB_TYPE', 'mssql');
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'test');
+define('DB_USER', 'root');
+define('DB_PASS', 'root');
+
