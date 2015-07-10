@@ -86,7 +86,7 @@ def getApiData(code, type, zip):
 
 
 logger = setupLogger()
-
+logger.critical("***************Starting Test Sequence!!!****************")
 logger.info("Getting DB connection")
 wellcareConn = pypyodbc.connect("driver={SQL Server};server=work-pc;database=test;uid=root;pwd=root")
 stagingConn =pypyodbc.connect("driver={SQL Server};server=work-pc;database=test;uid=root;pwd=root")
@@ -142,3 +142,4 @@ for serviceCode in serviceCodeList:
 
 
 stagingConn.close()
+logger.critical("***************Test Sequence Completed!!!****************")
