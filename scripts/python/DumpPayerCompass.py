@@ -3,6 +3,7 @@ import requests
 import json
 import pypyodbc
 import logging
+from logging.handlers import RotatingFileHandler
 import time
 import datetime
 
@@ -63,9 +64,11 @@ zipCodeQuery = """
 def setupLogger():
     logger = logging.getLogger('simple_example')
     logger.setLevel(logging.DEBUG)
-    wh = logging.FileHandler('wellcare.log')
+    wh = RotatingFileHandler('wellcare\\wellcare.log', mode='a', maxBytes=1024*1024*1024,
+                                 backupCount=50, encoding=None, delay=0)
     wh.setLevel(logging.CRITICAL)
-    ah = logging.FileHandler('alithias.log')
+    ah = RotatingFileHandler('alithias\\alithias.log', mode='a', maxBytes=1024*1024*1024,
+                                 backupCount=50, encoding=None, delay=0)
     ah.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
@@ -94,11 +97,8 @@ def getApiData(code, type, zip):
                    {"PricingInfo": None, "ServiceUnits": 1, "Type": type, "Value": code}
                ],
                "PostalCode": zip}
-    logger.critical("Sending API request")
-    logger.critical("Payload -> "+str(payload))
+    logger.critical("Sending Request, Payload -> "+str(payload))
     r = requests.post(url, headers=headers, data=json.dumps(payload, allow_nan=True))
-    logger.critical("Received response from API")
-    logger.critical("Response -> "+str(r.text))
     return r
 
 
@@ -131,6 +131,7 @@ for serviceCode in serviceCodeList:
             response = getApiData(code, typeVal, zipCode[0])
             pricing = response.json()
             if pricing['Components'][0]['PricingInfo']:
+                logger.critical("Response with pricing info!")
                 for info in pricing['Components'][0]['PricingInfo']:
                     sd = pricing["ServiceDate"]
                     value = (
@@ -146,6 +147,9 @@ for serviceCode in serviceCodeList:
                         state
                     )
                     values.append(value)
+            else:
+                    logger.critical("Response without pricing info! ")
+                    logger.critical(response.text)
         if (len(values) > 0):
             logger.debug("Batch insert to database")
             logger.debug(values)
