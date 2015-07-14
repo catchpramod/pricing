@@ -4,6 +4,24 @@ import json
 import pypyodbc
 import logging
 import time
+import datetime
+
+
+# Create table for the dump table
+
+# CREATE TABLE [dbo].[Payer_Compass_Dump](
+# 	[ID] [bigint] IDENTITY(1,1) NOT NULL,
+# 	[ServiceCode] [varchar](20) NULL,
+# 	[ServiceType] [varchar](50) NULL,
+# 	[ServiceUnits] [varchar](20) NULL,
+# 	[FacilityRate] [decimal](10, 2) NULL,
+# 	[NonFacilityRate] [decimal](10, 2) NULL,
+# 	[PostalCode] [varchar](10) NULL,
+# 	[State] [varchar](20) NULL,
+# 	[NPI] [varchar](20) NULL,
+# 	[ServiceDate] [datetime] NULL,
+# 	[DownloadDate] [datetime] NULL
+# ) ON [PRIMARY]
 
 state = "WI"
 srvCodesQuery = """
@@ -18,9 +36,6 @@ select distinct Code, CodeType, Id from
   [Alithias_WellCare_V2].[dbo].[MD_PayerCompassServiceTypes] pctype
   on tmp.CodeType=pctype.[Type]
   where Code!='NULL' and CodeType!='NULL'
-"""
-insertLocalQuery = """
-INSERT INTO pricetest (npi, rate) VALUES (?,?)
 """
 
 insertDumpQuery = """
@@ -70,18 +85,20 @@ def getApiData(code, type, zip):
     url = "https://test02.payercompass.com/apps/pricer/services/v2/insight.aspx"
     headers = {"Authorization": "Basic YXBpLmFsaXRoaWFzLndlbGxjYXJlOlJKRXBkWThQ",
                "IsCompressed": "False", "Environment": "Sandbox", "Format": "JSON"}
+
+    # url = " https://Visium.chart-tech.com/apps/pricer/services/v2/insight.aspx"
+    # headers = {"Authorization": "Basic YXBpLmFsaXRoaWFzLndlbGxjYXJlOlJKRXBkWThQ",
+    #            "IsCompressed": "False", "Environment": "Production", "Format": "JSON"}
     payload = {"BundleID": 1001, "ReturnDetail": True,
                "Components": [
                    {"PricingInfo": None, "ServiceUnits": 1, "Type": type, "Value": code}
                ],
                "PostalCode": zip}
     logger.critical("Sending API request")
-    logger.critical("Headers -> "+str(headers))
     logger.critical("Payload -> "+str(payload))
     r = requests.post(url, headers=headers, data=json.dumps(payload, allow_nan=True))
     logger.critical("Received response from API")
-    logger.critical("Response Headers -> "+str(r.headers))
-    logger.critical("Response Body -> "+str(r.text))
+    logger.critical("Response -> "+str(r.text))
     return r
 
 
@@ -95,7 +112,7 @@ logger.info("DB connection successful")
 wellcareCursor = wellcareConn.cursor()
 wellcareCursor.execute(srvCodesQuery)
 # serviceCodeList = wellcareCursor.fetchall()  # gets list of tuples, each row is a tuple
-serviceCodeList = wellcareCursor.fetchmany(2)
+serviceCodeList = wellcareCursor.fetchmany(1)
 wellcareConn.close()
 
 stagingCursor = stagingConn.cursor()
@@ -124,8 +141,8 @@ for serviceCode in serviceCodeList:
                         float(info['NonFacilityRate']),
                         zipCode[0],
                         str(info['NPI']),
-                        str(sd[sd.find('(') + 1: sd.find(')')]),
-                        str(int(time.time()*1000)),
+                        datetime.datetime(*time.localtime(int(sd[sd.find('(') + 1: sd.find(')')])/1000)[:7]),
+                        datetime.datetime.now(),
                         state
                     )
                     values.append(value)
