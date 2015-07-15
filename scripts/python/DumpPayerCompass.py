@@ -60,15 +60,20 @@ zipCodeQuery = """
   where StateCode=?
  """
 
+alreadyInsertedQuery = """
+select count(id) as present  FROM [National_Pricing].[dbo].[Payer_Compass_Dump]
+where ServiceCode=? and PostalCode=?
+"""
+
 
 def setupLogger():
     logger = logging.getLogger('simple_example')
     logger.setLevel(logging.DEBUG)
-    wh = RotatingFileHandler('wellcare\\wellcare.log', mode='a', maxBytes=1024*1024*1024,
-                                 backupCount=50, encoding=None, delay=0)
+    wh = RotatingFileHandler('wellcare\\wellcare.log', mode='a', maxBytes=500 * 1024 * 1024,
+                             backupCount=50, encoding=None, delay=0)
     wh.setLevel(logging.CRITICAL)
-    ah = RotatingFileHandler('alithias\\alithias.log', mode='a', maxBytes=1024*1024*1024,
-                                 backupCount=50, encoding=None, delay=0)
+    ah = RotatingFileHandler('alithias\\alithias.log', mode='a', maxBytes=500 * 1024 * 1024,
+                             backupCount=50, encoding=None, delay=0)
     ah.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
@@ -97,7 +102,7 @@ def getApiData(code, type, zip):
                    {"PricingInfo": None, "ServiceUnits": 1, "Type": type, "Value": code}
                ],
                "PostalCode": zip}
-    logger.critical("Sending Request, Payload -> "+str(payload))
+    logger.critical("Sending Request, Payload -> " + str(payload))
     r = requests.post(url, headers=headers, data=json.dumps(payload, allow_nan=True))
     return r
 
@@ -105,51 +110,63 @@ def getApiData(code, type, zip):
 logger = setupLogger()
 logger.critical("***************Starting Test Sequence!!!****************")
 logger.info("Getting DB connection")
-wellcareConn = pypyodbc.connect("driver={SQL Server};server=work-pc;database=test;uid=root;pwd=root")
-stagingConn =pypyodbc.connect("driver={SQL Server};server=work-pc;database=test;uid=root;pwd=root")
+wellcareConn = pypyodbc.connect(
+    "driver={SQL Server};server=wellcare.arvixecloud.com;database=Alithias_WellCare_V2;uid=wellcaresqladmin;pwd=P@55w0rdNepal")
+stagingConn = pypyodbc.connect(
+    "driver={SQL Server};server=astaging.arvixecloud.com;database=National_Pricing;uid=stagingsqladmin;pwd=p@ssw0rd")
+stagingConn1 = pypyodbc.connect(
+    "driver={SQL Server};server=astaging.arvixecloud.com;database=National_Pricing;uid=stagingsqladmin;pwd=p@ssw0rd")
 logger.info("DB connection successful")
 
 wellcareCursor = wellcareConn.cursor()
 wellcareCursor.execute(srvCodesQuery)
 # serviceCodeList = wellcareCursor.fetchall()  # gets list of tuples, each row is a tuple
-serviceCodeList = wellcareCursor.fetchmany(1)
+serviceCodeList = wellcareCursor.fetchall()
 wellcareConn.close()
 
 stagingCursor = stagingConn.cursor()
+stagingCursor1 = stagingConn1.cursor()
+
 zipListInput = ['WI']
 stagingCursor.execute(zipCodeQuery, zipListInput)
 # zipList = stagingCursor.fetchall()
 zipList = stagingCursor.fetchmany(10)
+zipCode = ''
 
 for serviceCode in serviceCodeList:
-    code = serviceCode[0]
-    typeStr = serviceCode[1]
-    typeVal = int(serviceCode[2])
-    values = []
     try:
+        code = serviceCode[0]
+        typeStr = serviceCode[1]
+        typeVal = int(serviceCode[2])
+        values = []
         for zipCode in zipList:
-            response = getApiData(code, typeVal, zipCode[0])
-            pricing = response.json()
-            if pricing['Components'][0]['PricingInfo']:
-                logger.critical("Response with pricing info!")
-                for info in pricing['Components'][0]['PricingInfo']:
-                    sd = pricing["ServiceDate"]
-                    value = (
-                        code,
-                        typeStr,
-                        str(pricing['Components'][0]['ServiceUnits']),
-                        float(info['FacilityRate']),
-                        float(info['NonFacilityRate']),
-                        zipCode[0],
-                        str(info['NPI']),
-                        datetime.datetime(*time.localtime(int(sd[sd.find('(') + 1: sd.find(')')])/1000)[:7]),
-                        datetime.datetime.now(),
-                        state
-                    )
-                    values.append(value)
-            else:
+            serviceZipListInput = [code, zipCode[0]]
+            stagingCursor1.execute(alreadyInsertedQuery, serviceZipListInput)
+            if not stagingCursor1.fetchone()[0]:
+                response = getApiData(code, typeVal, zipCode[0])
+                pricing = response.json()
+                if pricing['Components'][0]['PricingInfo']:
+                    logger.critical("Response with pricing info!")
+                    for info in pricing['Components'][0]['PricingInfo']:
+                        sd = pricing["ServiceDate"]
+                        value = (
+                            code,
+                            typeStr,
+                            str(pricing['Components'][0]['ServiceUnits']),
+                            float(info['FacilityRate']),
+                            float(info['NonFacilityRate']),
+                            zipCode[0],
+                            str(info['NPI']),
+                            datetime.datetime(*time.localtime(int(sd[sd.find('(') + 1: sd.find(')')]) / 1000)[:7]),
+                            datetime.datetime.now(),
+                            state
+                        )
+                        values.append(value)
+                else:
                     logger.critical("Response without pricing info! ")
                     logger.critical(response.text)
+            else:
+                logger.info("Records already present for : " + str(serviceZipListInput))
         if (len(values) > 0):
             logger.debug("Batch insert to database")
             logger.debug(values)
@@ -158,9 +175,11 @@ for serviceCode in serviceCodeList:
         logger.exception("Error while parsing JSON from response")
     except BaseException as e:
         logger.exception("BaseException")
+        logger.info("Service Code: " + str(serviceCode))
+        logger.info("Zip Code: " + str(zipCode))
     finally:
         stagingCursor.commit()
 
-
 stagingConn.close()
+stagingCursor1.close()
 logger.critical("***************Test Sequence Completed!!!****************")
