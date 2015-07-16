@@ -24,7 +24,7 @@ import datetime
 # 	[DownloadDate] [datetime] NULL
 # ) ON [PRIMARY]
 
-state = "WI"
+state = "IL"
 srvCodesQuery = """
 select distinct Code, CodeType, Id from
   (
@@ -125,7 +125,7 @@ wellcareConn.close()
 stagingCursor = stagingConn.cursor()
 stagingCursor1 = stagingConn1.cursor()
 
-zipListInput = ['WI']
+zipListInput = [state]
 stagingCursor.execute(zipCodeQuery, zipListInput)
 # zipList = stagingCursor.fetchall()
 zipList = stagingCursor.fetchmany(10)
