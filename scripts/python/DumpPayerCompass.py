@@ -3,7 +3,7 @@ import requests
 import json
 import pypyodbc
 import logging
-from logging.handlers import RotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
 import time
 import datetime
 
@@ -69,11 +69,9 @@ where ServiceCode=? and PostalCode=?
 def setupLogger():
     logger = logging.getLogger('simple_example')
     logger.setLevel(logging.DEBUG)
-    wh = RotatingFileHandler('wellcare\\wellcare.log', mode='a', maxBytes=500 * 1024 * 1024,
-                             backupCount=50, encoding=None, delay=0)
+    wh = TimedRotatingFileHandler('wellcare\\wellcare.log', when='midnight')
     wh.setLevel(logging.CRITICAL)
-    ah = RotatingFileHandler('alithias\\alithias.log', mode='a', maxBytes=500 * 1024 * 1024,
-                             backupCount=50, encoding=None, delay=0)
+    ah = TimedRotatingFileHandler('alithias\\alithias.log', when='midnight')
     ah.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
@@ -139,11 +137,12 @@ for serviceCode in serviceCodeList:
         typeStr = serviceCode[1]
         typeVal = int(serviceCode[2])
         values = []
-        for zipCode in zipList:
-            serviceZipListInput = [code, zipCode[0]]
+        for zipCodeTuple in zipList:
+            zipCode = str(zipCodeTuple[0])
+            serviceZipListInput = [code, zipCode]
             stagingCursor1.execute(alreadyInsertedQuery, serviceZipListInput)
             if not stagingCursor1.fetchone()[0]:
-                response = getApiData(code, typeVal, zipCode[0])
+                response = getApiData(code, typeVal, zipCode)
                 pricing = response.json()
                 if pricing['Components'][0]['PricingInfo']:
                     logger.critical("Response with pricing info!")
@@ -155,7 +154,7 @@ for serviceCode in serviceCodeList:
                             str(pricing['Components'][0]['ServiceUnits']),
                             float(info['FacilityRate']),
                             float(info['NonFacilityRate']),
-                            zipCode[0],
+                            zipCode,
                             str(info['NPI']),
                             datetime.datetime(*time.localtime(int(sd[sd.find('(') + 1: sd.find(')')]) / 1000)[:7]),
                             datetime.datetime.now(),
