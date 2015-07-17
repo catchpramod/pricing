@@ -62,7 +62,7 @@ zipCodeQuery = """
 
 alreadyInsertedQuery = """
 select count(id) as present  FROM [National_Pricing].[dbo].[Payer_Compass_Dump]
-where ServiceCode=? and PostalCode=?
+where ServiceCode=? and ServiceType=? and PostalCode=?
 """
 
 
@@ -139,7 +139,7 @@ for serviceCode in serviceCodeList:
         values = []
         for zipCodeTuple in zipList:
             zipCode = str(zipCodeTuple[0])
-            serviceZipListInput = [code, zipCode]
+            serviceZipListInput = [code, typeStr, zipCode]
             stagingCursor1.execute(alreadyInsertedQuery, serviceZipListInput)
             if not stagingCursor1.fetchone()[0]:
                 response = getApiData(code, typeVal, zipCode)
