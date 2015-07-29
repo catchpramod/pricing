@@ -98,7 +98,6 @@ BEGIN
 		 imp.[SourceFileName],
 		 imp.[SourceType]
 	From [NS_Import].dbo.PricingCore imp
-	where imp.ProviderNPI is null
 	
 	-- NPI Update, match provider id, update NPI
 	--update [dbo].[PricingCore]
