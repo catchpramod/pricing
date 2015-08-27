@@ -23,6 +23,10 @@ EXECUTE NS_ETL.dbo.SP_NS_Import_Claims 'AP_MedicalClaims_PSE', 'File'
 EXECUTE NS_ETL.dbo.SP_NS_Import_Claims 'AP_MedicalClaims_Trilogy', 'File'
 
 
+EXECUTE NS_ETL.dbo.SP_NS_Import_Claims 'AP_MedicalClaims'
+
+
+
 --scrub core(CMS/PC)
 EXECUTE NS_ETL.dbo.SP_NS_Scrub 'Core', 'Y' --'Y' is to refresh
 --Scrub Claims

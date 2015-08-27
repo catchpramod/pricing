@@ -63,6 +63,7 @@ BEGIN
 		CREATE TABLE NS_IMPORT.dbo.ClaimsCore
 		(
 			[ID]  INTEGER IDENTITY(1,1) PRIMARY KEY,
+			[ClaimKey] [nvarchar](200) NULL,
 			[CompanyID] [int] NOT NULL,
 			[CompanyCode] [nvarchar](200) NULL,
 			[CompanyName] [nvarchar](200) NULL,

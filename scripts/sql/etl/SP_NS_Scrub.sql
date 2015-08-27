@@ -181,7 +181,7 @@ BEGIN
 			EXECUTE (@deleteSQL)
 
 			set @deleteSQL=
-						'Delete from NS_Scrub.[dbo].[Multiplier] where 1=1 '
+						'Truncate table NS_Scrub.[dbo].[Multiplier]'
 
 			EXECUTE (@deleteSQL)
 

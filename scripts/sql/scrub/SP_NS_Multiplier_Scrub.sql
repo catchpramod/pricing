@@ -41,58 +41,31 @@ BEGIN
 	)
 
 	
-		select 
-		 cl.NPI, cl.Entity_Type, pc.ProviderState, pc.ProviderZip, cl.code, cl.code_type,
-		 (cl.allowed/pc.AllowedAmount)	Multiplier, cl.discount, cast(GETDATE() as date) gen_date, 'CLAIMS' src
-		from (
-				select 
-					   code,code_type
-					  ,cast(BilledAmt as decimal) billed
-					  ,[PlaceOfService]
-					  ,[DRGCode]
-					  ,cast(AllowedAmt as decimal) allowed
-					  ,Modifier1
-					  ,CompanyCode
-					  ,[NetworkCode]
-					  ,n.NPI, IIF( n.[Entity_Type_Code]='1', 'I', 'O' ) Entity_Type
-					  ,(1-cast(AllowedAmt as decimal)/cast(BilledAmt as decimal))*100 discount
-			  
-			  
-			  
-				from NS_Import.dbo.ClaimsCore c 
-				inner join Alithias_Common.dbo.MasterNPI n 
-				on n.NPI = 
-						CASE
-							WHEN (c.BillingProviderNPI = c.RenderingProviderNPI OR c.RenderingProviderNPI='0000000000')   THEN c.BillingProviderNPI
-							WHEN (c.BillingProviderNPI != c.RenderingProviderNPI AND c.RenderingProviderNPI!='0000000000') 
-							THEN 
-								CASE WHEN c.Modifier1 in ('26','25') THEN c.RenderingProviderNPI
-									 ElSE c.BillingProviderNPI
-								END
-                   
-						END
+		select
 
-				CROSS APPLY
-				  (
-					VALUES (DRGCode,'DRG'),([HCPCSCPTCode],'HCPCS')
-				  ) CA (code, code_type)	
+			cl.[ProviderNPI],
+			cl.[ProviderEntityCode],
+			cl.[ProviderState],
+			cl.[ProviderZip],
+			cl.[ServiceCode],
+			cl.[ServiceCodeType],
+			(cl.AllowedAmount/pc.AllowedAmount) Multiplier,
+			(1-cl.AllowedAmount/cl.ChargedAmount)*100 Discount,
+			cast(GETDATE() as date) GenerateDate,
+			'CLAIMS' Source
 	
-				where 
-				 not (code is Null  OR code='') 
-				 and cast(BilledAmt as decimal) > 0
-				 and cast(AllowedAmt as decimal) > 0
-
-			) cl
-	
+			From dbo.ClaimsCore cl
 			Inner Join dbo.PricingCore pc
+
 			on 
-			pc.ProviderNPI = cl.NPI
-			and pc.ServiceCode = cl.code
-			and pc.ServiceCodeType = cl.code_type
-			and pc.ProviderEntityCode=cl.Entity_Type
+			pc.ProviderNPI = cl.[ProviderNPI]
+			and pc.ServiceCode = cl.[ServiceCode]
+			and pc.ServiceCodeType = cl.[ServiceCodeType]
+			and pc.ProviderEntityCode=cl.[ProviderEntityCode]
 	
 			where 
 				pc.AllowedAmount > 0.0
+				and cl.AllowedAmount > pc.AllowedAmount 
 				
 
 END

@@ -70,12 +70,15 @@ BEGIN
 		[SourceFileName],
 		[SourceType]
 	)
+	
+
+
 	SELECT
 	
 		n.NPI,
 		IIF( n.[Entity_Type_Code]='1', n.Last_Name, n.Organization_Name) ,
-		IIF( n.[Entity_Type_Code]='1', n.First_Name, '' ) ,
-		IIF( n.[Entity_Type_Code]='1', n.Middle_Name, '' ) ,
+		IIF( n.[Entity_Type_Code]='1', n.First_Name, Null ) ,
+		IIF( n.[Entity_Type_Code]='1', n.Middle_Name, Null ) ,
 		IIF( n.[Entity_Type_Code]='1', 'I', 'O' ),
 		IIF( n.[Entity_Type_Code]='1', n.Practice_Address1, n.Mailing_Address1 ),
 		IIF( n.[Entity_Type_Code]='1', n.Practice_Address2, n.Mailing_Address2 ),
@@ -83,9 +86,9 @@ BEGIN
 		IIF( n.[Entity_Type_Code]='1', n.Practice_State, n.Mailing_State ),
 		Left(IIF( n.[Entity_Type_Code]='1', n.Practice_Postal, n.Mailing_Postal ),5),
 		'US',
-		code,
-		code_type,
-		code_description,
+		imp.[HCPCSCPTCode],
+		'HCPCS',
+		imp.HCPCSCPTCodeDescription,
 		imp.Units,
 		imp.BeginingDateofService,
 		imp.PlaceOfService,
@@ -97,27 +100,80 @@ BEGIN
 			  
 			  
 		from NS_Import.dbo.ClaimsCore imp
-		inner join Alithias_Common.dbo.MasterNPI n 
+		left join Alithias_Common.dbo.MasterNPI n 
 		on n.NPI = 
 				CASE
 					WHEN (imp.BillingProviderNPI = imp.RenderingProviderNPI OR imp.RenderingProviderNPI='0000000000')   THEN imp.BillingProviderNPI
 					WHEN (imp.BillingProviderNPI != imp.RenderingProviderNPI AND imp.RenderingProviderNPI!='0000000000') 
 					THEN 
-						CASE WHEN imp.Modifier1 in ('26','25') THEN imp.RenderingProviderNPI
-								ElSE imp.BillingProviderNPI
-						END
-                   
+						imp.RenderingProviderNPI
+						--CASE WHEN imp.Modifier1 in ('26','25') THEN imp.RenderingProviderNPI
+						--		ElSE imp.BillingProviderNPI
+						--END
 				END
-
-		CROSS APPLY
-			(
-			VALUES (DRGCode,'DRG', DRGCode ),([HCPCSCPTCode],'HCPCS', HCPCSCPTCodeDescription )
-			) CA (code, code_type, code_description)	
-	
 		where 
-			not (code is Null  OR code='' OR code ='0' OR code='000') 
-			and cast(BilledAmt as decimal) > 0
-			and cast(AllowedAmt as decimal) > 0
+			not (imp.[HCPCSCPTCode] is Null  OR imp.[HCPCSCPTCode]='') 
+			and 
+			cast(imp.BilledAmt as decimal) > 0
+			and cast(imp.AllowedAmt as decimal) > 0
+
+
+
+	Union
+
+
+	SELECT distinct
+		n.NPI,
+		n.Organization_Name,
+		Null,
+		Null,
+		'O',
+		n.Mailing_Address1,
+		n.Mailing_Address2,
+		n.Mailing_City,
+		n.Mailing_State,
+		Left(n.Mailing_Postal,5),
+		'US',
+		imp.DRGCode,
+		'DRG',
+		imp.DRGCode,
+		clk.Units,
+		imp.BeginingDateofService,
+		imp.PlaceOfService,
+		clk.AllowedAmt,
+		clk.BilledAmt,
+		cast(GETDATE() as date),
+		imp.SourceFile,
+		imp.SourceClient
+
+		from NS_Import.dbo.ClaimsCore imp
+		inner join Alithias_Common.dbo.MasterNPI n 
+		on n.NPI = imp.BillingProviderNPI
+		inner join 
+		(	SELECT
+				ins.[ClaimKey],
+				sum(ins.Units) units,
+				sum(ins.AllowedAmt) AllowedAmt,
+				sum(ins.BilledAmt) BilledAmt
+		
+				from NS_import.dbo.ClaimsCore ins
+				where 
+					not (ins.DRGCode is Null  OR ins.DRGCode='' OR ins.DRGCode ='0' OR ins.DRGCode='000') 
+					and cast(ins.BilledAmt as decimal) > 0
+					and cast(ins.AllowedAmt as decimal) > 0
+				Group by 
+				ins.[ClaimKey]
+		) clk
+		on imp.ClaimKey = clk.Claimkey
+		where 
+			not (imp.DRGCode is Null  OR imp.DRGCode='' OR imp.DRGCode ='0' OR imp.DRGCode='000') 
+			and 
+			cast(imp.BilledAmt as decimal) > 0
+			and cast(imp.AllowedAmt as decimal) > 0
+		
+
+
+
 
 
 END
