@@ -127,8 +127,8 @@ stagingCursor1 = stagingConn1.cursor()
 
 zipListInput = [state]
 stagingCursor.execute(zipCodeQuery, zipListInput)
-# zipList = stagingCursor.fetchall()
-zipList = stagingCursor.fetchmany(10)
+zipList = stagingCursor.fetchall()
+# zipList = stagingCursor.fetchmany(10)
 zipCode = ''
 
 for serviceCode in serviceCodeList:
