@@ -111,9 +111,9 @@ logger.info("Getting DB connection")
 wellcareConn = pypyodbc.connect(
     "driver={SQL Server};server=wellcare.arvixecloud.com;database=Alithias_WellCare_V2;uid=wellcaresqladmin;pwd=P@55w0rdNepal")
 stagingConn = pypyodbc.connect(
-    "driver={SQL Server};server=astaging.arvixecloud.com;database=National_Pricing;uid=stagingsqladmin;pwd=p@ssw0rd")
+    "driver={SQL Server};server=astaging.arvixecloud.com;database=NS_Import;uid=stagingsqladmin;pwd=p@ssw0rd")
 stagingConn1 = pypyodbc.connect(
-    "driver={SQL Server};server=astaging.arvixecloud.com;database=National_Pricing;uid=stagingsqladmin;pwd=p@ssw0rd")
+    "driver={SQL Server};server=astaging.arvixecloud.com;database=NS_Import;uid=stagingsqladmin;pwd=p@ssw0rd")
 logger.info("DB connection successful")
 
 wellcareCursor = wellcareConn.cursor()
