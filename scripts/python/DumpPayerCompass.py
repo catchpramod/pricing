@@ -24,7 +24,7 @@ import datetime
 # 	[DownloadDate] [datetime] NULL
 # ) ON [PRIMARY]
 
-state = "IL"
+state = "WI"
 srvCodesQuery = """
 select distinct Code, CodeType, Id from
   (
@@ -61,7 +61,7 @@ zipCodeQuery = """
  """
 
 alreadyInsertedQuery = """
-select count(id) as present  FROM [National_Pricing].[dbo].[Payer_Compass_Dump]
+select count(id) as present  FROM [NS_Import].[dbo].[Payer_Compass_Dump]
 where ServiceCode=? and ServiceType=? and PostalCode=?
 """
 
